@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
-from typing import TYPE_CHECKING, Callable, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from attrs import Factory, define, field
 
@@ -12,6 +12,8 @@ from griptape.engines import BaseExtractionEngine
 from griptape.utils import J2
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from griptape.rules import Ruleset
 
 
@@ -20,9 +22,7 @@ class CsvExtractionEngine(BaseExtractionEngine):
     column_names: list[str] = field(kw_only=True)
     generate_system_template: J2 = field(default=Factory(lambda: J2("engines/extraction/csv/system.j2")), kw_only=True)
     generate_user_template: J2 = field(default=Factory(lambda: J2("engines/extraction/csv/user.j2")), kw_only=True)
-    format_header: Callable[[list[str]], str] = field(
-        default=Factory(lambda: lambda value: ",".join(value)), kw_only=True
-    )
+    format_header: Callable[[list[str]], str] = field(default=Factory(lambda: ",".join), kw_only=True)
     format_row: Callable[[dict], str] = field(
         default=Factory(lambda: lambda value: ",".join([value or "" for value in value.values()])), kw_only=True
     )
@@ -31,7 +31,7 @@ class CsvExtractionEngine(BaseExtractionEngine):
         self,
         artifacts: ListArtifact[TextArtifact],
         *,
-        rulesets: Optional[list[Ruleset]] = None,
+        rulesets: list[Ruleset] | None = None,
         **kwargs,
     ) -> ListArtifact[TextArtifact]:
         return ListArtifact(
@@ -57,7 +57,7 @@ class CsvExtractionEngine(BaseExtractionEngine):
         artifacts: list[TextArtifact],
         rows: list[TextArtifact],
         *,
-        rulesets: Optional[list[Ruleset]] = None,
+        rulesets: list[Ruleset] | None = None,
     ) -> list[TextArtifact]:
         artifacts_text = self.chunk_joiner.join([a.value for a in artifacts])
         system_prompt = self.generate_system_template.render(

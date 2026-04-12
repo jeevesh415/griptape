@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import base64
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import attrs
 import pyaudio  # pyright: ignore[reportMissingModuleSource]
@@ -25,7 +25,7 @@ class AudioPlayer:
     rate: int = attrs.field(default=24000)
     chunk_size: int = attrs.field(default=1024)
 
-    audio: pyaudio.PyAudio = attrs.field(default=attrs.Factory(lambda: pyaudio.PyAudio()))
+    audio: pyaudio.PyAudio = attrs.field(default=attrs.Factory(pyaudio.PyAudio))
     stream: pyaudio.Stream = attrs.field(init=False)
 
     def __enter__(self) -> Self:
@@ -40,9 +40,9 @@ class AudioPlayer:
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc_value: Optional[BaseException],
-        exc_traceback: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_traceback: TracebackType | None,
     ) -> None:
         self.close()
 

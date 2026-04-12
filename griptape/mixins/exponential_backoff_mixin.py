@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from attrs import define, field
 from tenacity import Retrying, retry_if_not_exception_type, stop_after_attempt, wait_exponential
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @define(slots=False)
@@ -13,7 +16,7 @@ class ExponentialBackoffMixin(ABC):
     min_retry_delay: float = field(default=2, kw_only=True)
     max_retry_delay: float = field(default=10, kw_only=True)
     max_attempts: int = field(default=2, kw_only=True)
-    after_hook: Callable = field(default=lambda s: logging.warning(s), kw_only=True)
+    after_hook: Callable = field(default=logging.warning, kw_only=True)
     ignored_exception_types: tuple[type[Exception], ...] = field(factory=tuple, kw_only=True)
 
     def retrying(self) -> Retrying:

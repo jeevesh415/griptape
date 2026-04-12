@@ -3,15 +3,18 @@ from __future__ import annotations
 import warnings
 from abc import ABC
 from concurrent import futures
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from attrs import Factory, define, field
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @define(slots=False, kw_only=True)
 class FuturesExecutorMixin(ABC):
     create_futures_executor: Callable[[], futures.Executor] = field(
-        default=Factory(lambda: lambda: futures.ThreadPoolExecutor()),
+        default=Factory(lambda: futures.ThreadPoolExecutor),
     )
 
     _futures_executor: futures.Executor = field(

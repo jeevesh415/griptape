@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Union
+from typing import Any
 
 from attrs import define, field
 
 from griptape.artifacts import BaseArtifact
 
-Json = Union[dict[str, "Json"], list["Json"], str, int, float, bool, None]
+Json = dict[str, "Json"] | list["Json"] | str | int | float | bool | None
 
 
 @define
@@ -18,7 +18,7 @@ class JsonArtifact(BaseArtifact):
         value: The JSON data. Values will automatically be converted to a JSON-compatible format.
     """
 
-    value: Json = field(converter=lambda value: JsonArtifact.value_to_json(value), metadata={"serializable": True})
+    value: Json = field(converter=lambda value: JsonArtifact.value_to_json(value), metadata={"serializable": True})  # noqa: PLW0108
 
     @classmethod
     def value_to_json(cls, value: Any) -> Json:
