@@ -17,16 +17,9 @@ class TestAnthropicPromptDriver:
             "description": "test description: foo",
             "input_schema": {
                 "additionalProperties": False,
-                "properties": {
-                    "values": {
-                        "additionalProperties": False,
-                        "description": "Test input",
-                        "properties": {"test": {"type": "string"}},
-                        "required": ["test"],
-                        "type": "object",
-                    }
-                },
-                "required": ["values"],
+                "description": "Test input",
+                "properties": {"test": {"type": "string"}},
+                "required": ["test"],
                 "type": "object",
             },
             "name": "MockTool_test",
@@ -35,16 +28,9 @@ class TestAnthropicPromptDriver:
             "description": "test description",
             "input_schema": {
                 "additionalProperties": False,
-                "properties": {
-                    "values": {
-                        "additionalProperties": False,
-                        "description": "Test input",
-                        "properties": {"test": {"type": "string"}},
-                        "required": ["test"],
-                        "type": "object",
-                    }
-                },
-                "required": ["values"],
+                "description": "Test input",
+                "properties": {"test": {"type": "string"}},
+                "required": ["test"],
                 "type": "object",
             },
             "name": "MockTool_test_callable_schema",
@@ -53,16 +39,9 @@ class TestAnthropicPromptDriver:
             "description": "test description: foo",
             "input_schema": {
                 "additionalProperties": False,
-                "properties": {
-                    "values": {
-                        "additionalProperties": False,
-                        "description": "Test input",
-                        "properties": {"test": {"type": "string"}},
-                        "required": ["test"],
-                        "type": "object",
-                    }
-                },
-                "required": ["values"],
+                "description": "Test input",
+                "properties": {"test": {"type": "string"}},
+                "required": ["test"],
                 "type": "object",
             },
             "name": "MockTool_test_error",
@@ -71,16 +50,9 @@ class TestAnthropicPromptDriver:
             "description": "test description: foo",
             "input_schema": {
                 "additionalProperties": False,
-                "properties": {
-                    "values": {
-                        "additionalProperties": False,
-                        "description": "Test input",
-                        "properties": {"test": {"type": "string"}},
-                        "required": ["test"],
-                        "type": "object",
-                    }
-                },
-                "required": ["values"],
+                "description": "Test input",
+                "properties": {"test": {"type": "string"}},
+                "required": ["test"],
                 "type": "object",
             },
             "name": "MockTool_test_exception",
@@ -109,16 +81,9 @@ class TestAnthropicPromptDriver:
             "description": "test description: foo",
             "input_schema": {
                 "additionalProperties": False,
-                "properties": {
-                    "values": {
-                        "additionalProperties": False,
-                        "description": "Test input",
-                        "properties": {"test": {"type": "string"}},
-                        "required": ["test"],
-                        "type": "object",
-                    }
-                },
-                "required": ["values"],
+                "description": "Test input",
+                "properties": {"test": {"type": "string"}},
+                "required": ["test"],
                 "type": "object",
             },
             "name": "MockTool_test_str_output",
@@ -127,16 +92,9 @@ class TestAnthropicPromptDriver:
             "description": "test description",
             "input_schema": {
                 "additionalProperties": False,
-                "properties": {
-                    "values": {
-                        "additionalProperties": False,
-                        "description": "Test input",
-                        "properties": {"test": {"type": "string"}},
-                        "required": ["test"],
-                        "type": "object",
-                    }
-                },
-                "required": ["values"],
+                "description": "Test input",
+                "properties": {"test": {"type": "string"}},
+                "required": ["test"],
                 "type": "object",
             },
             "name": "MockTool_test_without_default_memory",
@@ -501,3 +459,63 @@ class TestAnthropicPromptDriver:
             ValueError, match="AnthropicPromptDriver does not support `native` structured output strategy."
         ):
             AnthropicPromptDriver(model="foo", structured_output_strategy="native")
+
+    @pytest.mark.parametrize(
+        ("model", "expected"),
+        [
+            ("claude-3-haiku", True),
+            ("claude-3-opus", True),
+            ("claude-sonnet-4-5", True),
+            ("claude-opus-4-7", False),
+            ("claude-opus-4-7-20251101", False),
+        ],
+    )
+    def test_supports_temperature(self, model, expected):
+        driver = AnthropicPromptDriver(model=model, api_key="api-key")
+        assert driver.supports_temperature == expected
+
+    @pytest.mark.parametrize(
+        ("model", "expected"),
+        [
+            ("claude-3-haiku", True),
+            ("claude-3-opus", True),
+            ("claude-sonnet-4-5", True),
+            ("claude-opus-4-7", False),
+            ("claude-opus-4-7-20251101", False),
+        ],
+    )
+    def test_supports_top_p(self, model, expected):
+        driver = AnthropicPromptDriver(model=model, api_key="api-key")
+        assert driver.supports_top_p == expected
+
+    @pytest.mark.parametrize(
+        ("model", "expected"),
+        [
+            ("claude-3-haiku", True),
+            ("claude-3-opus", True),
+            ("claude-sonnet-4-5", True),
+            ("claude-opus-4-7", False),
+            ("claude-opus-4-7-20251101", False),
+        ],
+    )
+    def test_supports_top_k(self, model, expected):
+        driver = AnthropicPromptDriver(model=model, api_key="api-key")
+        assert driver.supports_top_k == expected
+
+    def test_try_run_omits_sampling_params_for_opus_4_7(self, mock_client, prompt_stack, messages):
+        # Given
+        driver = AnthropicPromptDriver(
+            model="claude-opus-4-7",
+            api_key="api-key",
+            top_p=0.9,
+            top_k=100,
+        )
+
+        # When
+        driver.try_run(prompt_stack)
+
+        # Then
+        call_kwargs = mock_client.return_value.messages.create.call_args
+        assert "temperature" not in call_kwargs.kwargs
+        assert "top_p" not in call_kwargs.kwargs
+        assert "top_k" not in call_kwargs.kwargs
